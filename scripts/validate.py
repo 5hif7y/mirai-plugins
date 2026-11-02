@@ -1,11 +1,11 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["license-expression>=30.4"]
+# dependencies = []
 # ///
 """Checks every entry of the catalog: plugins/<name>.json.
 
 An entry is valid when its file name is a plugin name, it has exactly the
-fields description, url, commit and license with valid values, and the
+fields description, url and commit with valid values, and the
 repository at that commit is a Mirai plugin called like the file with a
 license file. No plugin name, of an entry or of a plugin a repository brings
 in its plugins/ folder, appears twice in the catalog.
@@ -20,13 +20,11 @@ import sys
 import tempfile
 from pathlib import Path
 
-from license_expression import get_spdx_licensing
-
 NAME = re.compile(r"[a-z][a-z0-9_]*")
 COMMIT = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
-FIELDS = {"description", "url", "commit", "license"}
+FIELDS = {"description", "url", "commit"}
 # Bytes the engine keeps of each text, without its terminating zero.
-MAX_NAME, MAX_DESCRIPTION, MAX_URL, MAX_LICENSE = 63, 255, 255, 63
+MAX_NAME, MAX_DESCRIPTION, MAX_URL = 63, 255, 255
 PLUGIN_FILE = "plugin.mirai"
 LICENSE_FILES = re.compile(r"(LICENSE|LICENCE|COPYING)([-_.].*)?", re.IGNORECASE)
 
@@ -43,26 +41,24 @@ def entry_errors(name: str, data: object) -> list[str]:
     if not NAME.fullmatch(name) or len(name) > MAX_NAME:
         errors.append(f"the file name must be the plugin name: lowercase letters, digits and '_' after a letter, at most {MAX_NAME} characters")
     if not isinstance(data, dict):
-        return errors + ["the file must hold a JSON object with description, url, commit and license"]
+        return errors + ["the file must hold a JSON object with description, url and commit"]
     missing, extra = FIELDS - data.keys(), data.keys() - FIELDS
     if missing:
         errors.append(f"add {', '.join(sorted(missing))}")
     if extra:
-        errors.append(f"remove {', '.join(sorted(extra))}: an entry has only description, url, commit and license")
+        errors.append(f"remove {', '.join(sorted(extra))}: an entry has only description, url and commit")
     for field in FIELDS & data.keys():
         if not isinstance(data[field], str):
             errors.append(f"{field} must be a string")
     if errors:
         return errors
-    description, url, commit, license = (data[f] for f in ("description", "url", "commit", "license"))
+    description, url, commit = (data[f] for f in ("description", "url", "commit"))
     if not description.strip() or len(description.encode()) > MAX_DESCRIPTION:
         errors.append(f"description must say what the plugin does in at most {MAX_DESCRIPTION} bytes")
     if not url.startswith("https://") or len(url.encode()) > MAX_URL:
         errors.append(f"url must be the https address of a public git repository, at most {MAX_URL} bytes")
     if not COMMIT.fullmatch(commit):
         errors.append("commit must be the full hash of the reviewed commit: 40 lowercase hexadecimal digits (64 in a SHA-256 repository)")
-    if len(license) > MAX_LICENSE or get_spdx_licensing().validate(license).errors:
-        errors.append(f"license must be an SPDX license expression such as MIT or MIT OR Apache-2.0, at most {MAX_LICENSE} characters")
     return errors
 
 

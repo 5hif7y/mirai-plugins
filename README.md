@@ -13,8 +13,7 @@ additions never conflict:
 {
   "description": "Procedural rivers that carve the terrain and flow downhill",
   "url": "https://github.com/someone/mirai-rivers.git",
-  "commit": "0123456789abcdef0123456789abcdef01234567",
-  "license": "MIT"
+  "commit": "0123456789abcdef0123456789abcdef01234567"
 }
 ```
 
@@ -24,8 +23,9 @@ additions never conflict:
   license file. Plugins in its `plugins/<name>/` folders (bridges to other plugins) install with
   it and need no entry of their own.
 - `commit` is the full hash of the commit to review; installs and updates check out exactly that.
-- `license` is the SPDX expression of the plugin's license. A plugin carries its data and their
-  licenses inside the repository.
+
+The license is the one in the plugin's repository; a plugin carries its data and their licenses
+inside it.
 
 To publish a new version, open a pull request that changes the `commit` of your entry. CI runs
 `uv run scripts/validate.py`, which you can also run locally before opening the pull request.
