@@ -1,0 +1,5 @@
+{
+  "description": "Reads and writes the .nav of GoldSrc bots (Counter-Strike 1.6) as JSON through editor API methods, for an agent to edit",
+  "url": "https://github.com/5hif7y/mirai-goldsrc-nav.git",
+  "commit": "174fcd5e0e4816f972a9231db0e032c341e55851"
+}
