@@ -1,0 +1,5 @@
+{
+  "description": "Imports GoldSrc studio models (.mdl v10: Half-Life, Counter-Strike 1.6) in the editor, with their textures, skeleton and sequences",
+  "url": "https://github.com/5hif7y/mirai-goldsrc-mdl.git",
+  "commit": "cfe13d3380051c9024ad285cd67a83b9abd23a57"
+}
