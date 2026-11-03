@@ -1,0 +1,5 @@
+{
+  "description": "Editor API methods for an agent to write maps in two passes: a structure from rooms and corridors, and a walk check between passes",
+  "url": "https://github.com/5hif7y/mirai-map-agent.git",
+  "commit": "930b45a1d5aac7f58fcfed0c830f1cc8205b1db2"
+}
