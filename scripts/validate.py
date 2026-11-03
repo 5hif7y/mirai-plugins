@@ -8,7 +8,8 @@ An entry is valid when its file name is a plugin name, it has exactly the
 fields description, url and commit with valid values, and the
 repository at that commit is a Mirai plugin called like the file with a
 license file. No plugin name, of an entry or of a plugin a repository brings
-in its plugins/ folder, appears twice in the catalog.
+in its plugins/ folder, appears twice in the catalog. An entry may have an
+icon beside it, plugins/<name>.png, a PNG of at most MAX_ICON pixels a side.
 
 Run from the root of the catalog: uv run scripts/validate.py
 """
@@ -27,6 +28,21 @@ FIELDS = {"description", "url", "commit"}
 MAX_NAME, MAX_DESCRIPTION, MAX_URL = 63, 255, 255
 PLUGIN_FILE = "plugin.mirai"
 LICENSE_FILES = re.compile(r"(LICENSE|LICENCE|COPYING)([-_.].*)?", re.IGNORECASE)
+# Pixels a side of an icon, project.PLUGIN_ICON_MAX of the engine.
+MAX_ICON = 128
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def icon_errors(path: Path) -> list[str]:
+    header = path.read_bytes()[:24]
+    if len(header) < 24 or header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
+        return ["the icon must be a PNG file"]
+    width, height = int.from_bytes(header[16:20]), int.from_bytes(header[20:24])
+    if width > MAX_ICON or height > MAX_ICON:
+        return [f"the icon is {width}x{height}: scale it to at most {MAX_ICON}x{MAX_ICON} pixels"]
+    if not path.with_suffix(".json").is_file():
+        return [f"the icon has no entry: add plugins/{path.stem}.json or remove it"]
+    return []
 
 
 def git(folder: Path, *args: str) -> str:
@@ -108,8 +124,11 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as scratch:
         for path in entries:
             where = f"plugins/{path.name}"
+            if path.is_file() and path.suffix == ".png":
+                failures += [f"{where}: {e}" for e in icon_errors(path)]
+                continue
             if not path.is_file() or path.suffix != ".json":
-                failures.append(f"{where}: plugins/ holds only <name>.json files")
+                failures.append(f"{where}: plugins/ holds only <name>.json files and their <name>.png icons")
                 continue
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))

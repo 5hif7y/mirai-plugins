@@ -23,6 +23,8 @@ additions never conflict:
   license file. Plugins in its `plugins/<name>/` folders (bridges to other plugins) install with
   it and need no entry of their own.
 - `commit` is the full hash of the commit to review; installs and updates check out exactly that.
+- Optionally, add `plugins/<name>.png` in the same pull request: the icon the engine shows for the
+  plugin before it is installed, a PNG of at most 128x128 pixels.
 
 The license is the one in the plugin's repository; a plugin carries its data and their licenses
 inside it.
