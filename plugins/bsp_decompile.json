@@ -1,0 +1,5 @@
+{
+  "description": "Imports Quake and GoldSrc BSPs in the editor, decompiled to brushes with their embedded textures (GPL-2.0-or-later)",
+  "url": "https://github.com/5hif7y/mirai-bsp-decompile.git",
+  "commit": "407d8f05d04da6d9dea8d0d23d8a7f33eb18b524"
+}
