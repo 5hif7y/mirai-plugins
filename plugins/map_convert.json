@@ -1,0 +1,5 @@
+{
+  "description": "Imports maps of Quake III and Source (.bsp), Hammer (.vmf), Doom 3 and standard Quake (.map) in the editor, through valve220",
+  "url": "https://github.com/5hif7y/mirai-map-convert.git",
+  "commit": "9cc8287d8ee36af6341aa54714643be7d6f49a75"
+}
