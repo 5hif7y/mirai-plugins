@@ -1,0 +1,5 @@
+{
+  "description": "Imports Valve 220 maps (.map, as TrenchBroom writes them) in the editor: brushes to static meshes with colliders and materials",
+  "url": "https://github.com/5hif7y/mirai-valve220.git",
+  "commit": "d670e3e496f441d8ccf90fc1f603f5c05a3376a8"
+}
