@@ -1,5 +1,5 @@
 {
-  "description": "Brush maps in one install: Valve 220 import, maps of Hammer, Doom 3, Quake and Quake III and Source BSPs through Valve 220, Quake and GoldSrc BSPs decompiled to brushes, and API methods for an agent that writes a map in two passes (valve220, map_convert, map_agent and bsp_decompile as companions)",
+  "description": "Brush maps in one install: Valve 220 import, Hammer, Doom 3, Quake and Quake III maps and Source BSPs through Valve 220, Quake and GoldSrc BSPs decompiled, and an API for agents that write maps",
   "url": "https://github.com/5hif7y/mirai-brush-maps.git",
   "commit": "84f622aa910695aef1104d11645880e68e6cccae"
 }
