@@ -21,7 +21,9 @@ additions never conflict:
   letter. No other entry, nor any plugin another repository brings, may use it.
 - `url` is the https address of a public git repository with `plugin.mirai` at its root and a
   license file. Plugins in its `plugins/<name>/` folders (bridges to other plugins) install with
-  it and need no entry of their own.
+  it and need no entry of their own. Such a folder may be a git submodule: its `url` in
+  `.gitmodules` must be https too, and the commit it pins must have its own `plugin.mirai` with
+  the name of the folder.
 - `commit` is the full hash of the commit to review; installs and updates check out exactly that.
 - Optionally, add `plugins/<name>.png` in the same pull request: the icon the engine shows for the
   plugin before it is installed, a PNG of at most 128x128 pixels.

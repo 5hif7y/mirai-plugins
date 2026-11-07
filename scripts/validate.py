@@ -8,7 +8,9 @@ An entry is valid when its file name is a plugin name, it has exactly the
 fields description, url and commit with valid values, and the
 repository at that commit is a Mirai plugin called like the file with a
 license file. No plugin name, of an entry or of a plugin a repository brings
-in its plugins/ folder, appears twice in the catalog. An entry may have an
+in its plugins/ folder, appears twice in the catalog. A companion in
+plugins/<name>/ may be a git submodule: its https url and the commit the
+gitlink pins are fetched and checked like a companion in the tree. An entry may have an
 icon beside it, plugins/<name>.png, a PNG of at most MAX_ICON pixels a side.
 
 Run from the root of the catalog: uv run scripts/validate.py
@@ -88,16 +90,50 @@ def manifest_name(folder: Path, path: str) -> str:
     return manifest["name"]
 
 
-def repository_plugins(name: str, url: str, commit: str, scratch: Path) -> list[str]:
-    """The plugins the repository brings at commit: its own first."""
-    folder = scratch / name
+def fetch(folder: Path, url: str, commit: str) -> list[str]:
+    """The files of url at commit, fetched into a new folder without blobs."""
     folder.mkdir()
     git(folder, "init", "--quiet")
     try:
         git(folder, "fetch", "--quiet", "--depth", "1", "--filter=blob:none", url, commit)
     except RuntimeError as error:
         raise RuntimeError(f"{url} has no commit {commit} that can be fetched: {error}")
-    files = git(folder, "ls-tree", "-r", "--name-only", "FETCH_HEAD").splitlines()
+    return git(folder, "ls-tree", "-r", "--name-only", "FETCH_HEAD").splitlines()
+
+
+def submodules(folder: Path) -> dict[str, str]:
+    """The url of each submodule in .gitmodules at FETCH_HEAD, by its path."""
+    try:
+        lines = git(folder, "config", "--blob", "FETCH_HEAD:.gitmodules", "--get-regexp", r"^submodule\..*\.(path|url)$")
+    except RuntimeError as error:
+        raise RuntimeError(f".gitmodules cannot be read: {error}")
+    paths: dict[str, str] = {}
+    urls: dict[str, str] = {}
+    for line in lines.splitlines():
+        key, _, value = line.partition(" ")
+        section, _, field = key.rpartition(".")
+        (paths if field == "path" else urls)[section] = value
+    return {path.strip("/"): urls.get(section, "") for section, path in paths.items()}
+
+
+def submodule_companion(name: str, path: str, url: str, commit: str, scratch: Path) -> str:
+    """The name of the plugin a submodule at plugins/<folder> brings."""
+    if not url.startswith("https://"):
+        raise RuntimeError(f"{path} is a submodule whose url must be the https address of a public git repository, not {url or 'missing'}")
+    folder = scratch / f"{name}.{path.split('/')[1]}"
+    files = fetch(folder, url, commit)
+    if PLUGIN_FILE not in files:
+        raise RuntimeError(f"{path} is the submodule {url} at {commit[:12]}, which has no {PLUGIN_FILE} at its root: it is not a Mirai plugin")
+    companion = manifest_name(folder, PLUGIN_FILE)
+    if companion != path.split("/")[1]:
+        raise RuntimeError(f"{path}/{PLUGIN_FILE} names the plugin {companion}: it must carry the name of its folder")
+    return companion
+
+
+def repository_plugins(name: str, url: str, commit: str, scratch: Path) -> list[str]:
+    """The plugins the repository brings at commit: its own first."""
+    folder = scratch / name
+    files = fetch(folder, url, commit)
     if PLUGIN_FILE not in files:
         raise RuntimeError(f"{url} at {commit[:12]} has no {PLUGIN_FILE} at its root: it is not a Mirai plugin")
     own = manifest_name(folder, PLUGIN_FILE)
@@ -113,6 +149,17 @@ def repository_plugins(name: str, url: str, commit: str, scratch: Path) -> list[
             if companion != parts[1]:
                 raise RuntimeError(f"{path} names the plugin {companion}: it must carry the name of its folder")
             plugins.append(companion)
+    # A companion that is a submodule is a gitlink plugins/<folder> (mode 160000) in the tree.
+    gitlinks = {}
+    for line in git(folder, "ls-tree", "FETCH_HEAD", "plugins/").splitlines():
+        info, _, path = line.partition("	")
+        mode, kind, target = info.split()
+        if mode == "160000" and kind == "commit":
+            gitlinks[path] = target
+    if gitlinks:
+        urls = submodules(folder) if ".gitmodules" in files else {}
+        for path, target in sorted(gitlinks.items()):
+            plugins.append(submodule_companion(name, path, urls.get(path, ""), target, scratch))
     return plugins
 
 
